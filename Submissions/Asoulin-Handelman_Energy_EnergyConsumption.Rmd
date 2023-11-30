@@ -1,0 +1,80 @@
+---
+title: 'Environment Hackathon -- Energy Consumption'
+author: "Ron Asoulin-Handelman"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+---
+
+``` {r, message=FALSE}
+
+#load in required data and libraries
+
+library(tidyverse)
+library(scales)
+library(plotly)
+library(ggmap)
+library(maps)
+library(ggplot2)
+
+dat = read.csv("EnergyData.csv")
+
+```
+
+``` {r, message=FALSE}
+#compute national average
+
+allAverages = dat %>%
+  summarize(avg = mean(Total.Energy.Consumed.per.Capita..million.Btu)) %>%
+  mutate(region = "(Entire) United States")
+
+```
+
+``` {r, message=FALSE}
+
+#compute state average
+
+allAverages = dat %>%
+  filter(State == "TN") %>%
+  summarize(avg = mean(Total.Energy.Consumed.per.Capita..million.Btu)) %>%
+  mutate(region = "Tennessee") %>%
+  bind_rows(allAverages)
+
+```
+
+``` {r, message=FALSE}
+
+#compute regional average
+
+allAverages = dat %>%
+  filter(State == "AL" | State == "FL" | State == "GA" | State == "KY"
+         | State == "MS" | State == "NC" | State == "SC") %>%
+  summarize(avg = mean(Total.Energy.Consumed.per.Capita..million.Btu)) %>%
+  mutate(region = "The Southeast") %>%
+  bind_rows(allAverages)
+
+```
+
+``` {r, message=FALSE}
+
+#create barplot
+
+graph = allAverages %>%
+  ggplot(aes(x=region, y=avg, fill=region), text=avg) +
+  geom_bar(stat="identity", color = "black") + 
+  labs(y = "Total Energy Consumption Per Capita \n (million Btu)", 
+       x = "Region of U.S.", 
+       fill = "Region of Country",
+       title = "Total Energy Consumption Per Capita Across U.S. Regions") + 
+  theme(axis.text.x = element_blank(), 
+        text = element_text(family = "avenir")) + 
+  scale_y_continuous(breaks = seq(0, 500, by=25)) + 
+  scale_fill_manual(values = c("The Southeast" = "#9E681C", "Tennessee" = "#6CA335", "(Entire) United States" = "#8DBEB3")) +
+  geom_text(aes(label = round(avg, 2)), stat = "identity",
+             vjust = -0.35, hjust = 0.5, family="avenir", size = 3.5) + 
+  theme(panel.grid.major = element_blank())
+  
+
+
+graph
+```
