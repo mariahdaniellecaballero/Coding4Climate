@@ -1,0 +1,353 @@
+---
+title: "Code for Our Climate"
+author: "Ethan Hsieh"
+date: "2023-11-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load necessary libraries
+require(tidyverse)  # Loads the tidyverse package for data manipulation
+```
+
+```{r}
+# Load data for different regions
+national <- read_csv("/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/National.csv")  # Reads national data from CSV
+alabama <- read_csv("/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/Alabama.csv")    # Reads data for Alabama from CSV
+florida <- read_csv("/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/Florida.csv")    # Reads data for Florida from CSV
+# ... (similar for other states)
+georgia <- read_csv("C:/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/Georgia.csv")
+kentucky <- read_csv("C:/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/Kentucky.csv")
+mississipi <- read_csv("C:/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/Mississippi.csv")
+ncarolina <- read_csv("C:/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/North Carolina.csv")
+scarolina <- read_csv("C:/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/South Carolina.csv")
+tennessee <- read_csv("C:/Users/Ethan/OneDrive - Vanderbilt/Documents/Ethan/Vandy/2023 Fall/Code for Our Climate/data/Tennessee.csv")
+```
+
+```{r}
+# Data wrangling for national data
+# (Repeating structure for each state, so comments are added for the first set of data wrangling steps)
+
+# Transpose, convert to dataframe, rename columns, filter data, create Year column, pivot longer, convert emissions to numeric
+national1 <- national %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V1, Livestock = V2, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+  
+# Similar data wrangling steps are applied to other states' data (alabama, florida, etc.)
+# Repetitive steps are followed for each state, changing variable names and paths accordingly
+
+alabama1 <- alabama %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V2, Livestock = V1, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+florida1 <- florida %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V2, Livestock = V1, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+georgia1 <- georgia %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V2, Livestock = V1, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+kentucky1 <- kentucky %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V1, Livestock = V2, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+mississipi1 <- mississipi %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V1, Livestock = V2, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+ncarolina1 <- ncarolina %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V2, Livestock = V1, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+scarolina1 <- scarolina %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V1, Livestock = V2, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+tennessee1 <- tennessee %>%
+  t() %>%
+  as.data.frame() %>%
+  rename(CropCultivation = V1, Livestock = V2, FuelCombustion = V3, GrossTotal = V4) %>%
+  filter(Livestock != "Livestock") %>%
+  rownames_to_column() %>%
+  rename(Year = rowname) %>%
+  pivot_longer(cols = -Year, names_to = "Category", values_to = "Emission") %>%
+  mutate(Emission = as.numeric(Emission))
+
+# similar structure, leaving 5 year gaps only, calculating percentage change
+national <- national %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `U.S. Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+alabama <- alabama %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `Alabama Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+florida <- florida %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `Florida Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+georgia <- georgia %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `Georgia Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+kentucky <- kentucky %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `Kentucky Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+mississipi <- mississipi %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `Mississippi Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+ncarolina <- ncarolina %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `North Carolina Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+scarolina <- scarolina %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `South Carolina Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+tennessee <- tennessee %>%
+  as.data.frame() %>%
+  gather(key = "Year", value = "Emissions", -1) %>%
+  mutate(Year = as.integer(Year)) %>%
+  rename(Categories = `Tennessee Emissions, Agricultural Sector, MMT CO2 eq.`) %>%
+  filter(Year %% 10 == 0 | Year %% 10 == 5) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Emissions - lag(Emissions))/lag(Emissions) * 100)
+
+# Creating a dataframe 'southeast1' by combining emissions data from multiple states in the southeastern region
+
+southeast1 <- tennessee1 %>%  # Using 'tennessee1' as the base dataframe
+  bind_cols(alabama1$Emission, florida1$Emission, georgia1$Emission, kentucky1$Emission, mississipi1$Emission, ncarolina1$Emission, scarolina1$Emission) %>%  # Merging columns from other state-specific dataframes based on 'Emission' column
+  rename(  # Renaming columns to state names for clarity
+    Alabama = ...4,  # Renaming column 4 to 'Alabama'
+    Tennessee = Emission,  # Keeping 'Emission' column as 'Tennessee'
+    Florida = ...5,  # Renaming column 5 to 'Florida'
+    Georgia = ...6,  # Renaming column 6 to 'Georgia'
+    Kentucky = ...7,  # Renaming column 7 to 'Kentucky'
+    Mississipi = ...8,  # Renaming column 8 to 'Mississipi'
+    North_Carolina = ...9,  # Renaming column 9 to 'North_Carolina'
+    South_Carolina = ...10  # Renaming column 10 to 'South_Carolina'
+  )
+
+# Calculating total emissions for each row in the 'southeast1' dataframe
+
+southeast1 <- southeast1 %>%  # Using the updated 'southeast1' dataframe
+  mutate(  # Adding a new column 'Total' representing the sum of emissions from different states
+    Total = rowSums(select(., Tennessee, Alabama, Georgia, Florida, Kentucky, Mississipi, North_Carolina, South_Carolina))
+  )
+
+# Aggregating data to create a new 'data1' dataframe with restructured emission information
+
+data1 <- southeast1 %>%  # Using the 'southeast1' dataframe
+  select(Year, Category, Tennessee, Total) %>%  # Selecting specific columns for the new dataframe
+  rename(Southeast = Total) %>%  # Renaming 'Total' column to 'Southeast'
+  bind_cols(national1$Emission) %>%  # Appending 'Emission' column from 'national1' dataframe
+  rename(National = ...5) %>%  # Renaming the appended 'Emission' column to 'National'
+  pivot_longer(cols = c(Tennessee, Southeast, National), names_to = "Level", values_to = "Value") %>%  # Transforming data to long format based on specific columns
+  pivot_wider(names_from = Category, values_from = Value) %>%  # Pivoting the data back to wide format based on 'Category' column
+  pivot_longer(cols = c(CropCultivation, Livestock, FuelCombustion, GrossTotal), names_to = "EmissionType", values_to = "Emission")  # Further restructuring data based on emission types
+
+# similar data wrangling as above
+southeast <- tennessee %>%
+  bind_cols(alabama$Emissions, florida$Emissions, georgia$Emissions, kentucky$Emissions, mississipi$Emissions, ncarolina$Emissions, scarolina$Emissions) %>%
+  rename(Alabama = ...5, Tennessee = Emissions, Florida = ...6, Georgia = ...7, Kentucky = ...8, Mississipi = ...9, North_Carolina = ...10, South_Carolina = ...11) %>%
+  ungroup() %>%
+  select(-PercentageChange) %>%
+  mutate(Total = rowSums(select(., Tennessee, Alabama, Georgia, Florida, Kentucky, Mississipi, North_Carolina, South_Carolina))) %>%
+  select(Year, Categories, Total) %>%
+  group_by(Categories) %>%
+  mutate(PercentageChange = (Total - lag(Total))/lag(Total) * 100)
+
+data <- southeast %>%
+  select(Year, Categories, PercentageChange) %>%
+  rename(Southeast = PercentageChange) %>%
+  bind_cols(national$PercentageChange, tennessee$PercentageChange) %>%
+  rename(National = ...4, Tennessee = ...5) %>%
+  mutate(Southeast = ifelse(is.na(Southeast), 0, Southeast),
+        National = ifelse(is.na(National), 0, National),
+        Tennessee = ifelse(is.na(Tennessee), 0, Tennessee)) %>%
+  rename(Category = Categories) %>%
+  pivot_longer(cols = c(Tennessee, Southeast, National), names_to = "Level", values_to = "PercentageChange")
+
+# data for stack-area graph
+stackarea <- data1 %>%
+  filter(Level != "National" & EmissionType != "GrossTotal")
+
+# data for percentage-change graph
+total <- data %>%
+  ungroup() %>%
+  filter(Category == "Gross total") %>%
+  select(Year, Level, PercentageChange) %>%
+  pivot_wider(values_from = PercentageChange, names_from = Level) %>%
+  pivot_longer(cols = c(Tennessee, Southeast), names_to = "Level", values_to = "PercentageChange")
+```
+
+```{r}
+# Modifying the 'EmissionType' column in 'stackarea' dataframe to change order of stacked areas
+stackarea$EmissionType <- factor(stackarea$EmissionType, 
+                                 levels = c("CropCultivation", "Livestock", "FuelCombustion"))
+
+# Install and load extrafont package
+library(extrafont)
+
+# Import Avenir font
+font_import(pattern = "Avenir")
+loadfonts()
+
+# Creating a ggplot object
+plot <- ggplot() +
+  # Adding an area plot for 'stackarea' data
+  geom_area(data = stackarea, aes(x = as.numeric(Year), y = Emission, fill = EmissionType)) +
+  # Adding line plots for 'total' data (possibly national and regional values)
+  geom_line(data = total, aes(x = as.numeric(Year), y = National, color = "National")) +
+  geom_line(data = total, aes(x = as.numeric(Year), y = PercentageChange, color = "PercentageChange")) +
+  # Adding points for 'total' data on the line plots
+  geom_point(data = total, aes(x = as.numeric(Year), y = National, color = "National")) +
+  geom_point(data = total, aes(x = as.numeric(Year), y = PercentageChange, color = "PercentageChange")) +
+  # Setting manual color fills for 'EmissionType' in the area plot
+  scale_fill_manual(values = c("#8DBEB3", "#B2AE20", "#77AD8C"), 
+                    breaks = c("CropCultivation", "FuelCombustion", "Livestock"), 
+                    labels = c("Crop Cultivation", "Fuel Combustion", "Livestock")) +
+  # Faceting the plot based on 'Level'
+  facet_wrap(~Level) +
+  # Setting y-axis labels and secondary y-axis for percentage change
+  scale_y_continuous(
+    name = "Emission in Million Metric Tons",
+    sec.axis = sec_axis(~., name = "Percentage Change in %")
+  ) +
+  # Setting plot labels and titles
+  labs(title = "Agricultural Emission in Southeast US and Tennessee 1990 to 2021",
+       subtitle = "Emission by Types and 5-Year-Percentage-Change Trend Lines",
+       x = "Year",
+       fill = "Emission Type") +
+  # Setting manual color scales for legend
+  scale_color_manual(name = "5-Year-%-Change",
+                     values = c(National = "#9E681C", PercentageChange = "black"),
+                     labels = c(National = "National Value", PercentageChange = "Regional Value"))+
+  theme(text = element_text(family = "Avenir"))
+
+ggsave("plot.png", plot = plot, width = 4000, height = 2000, units = "px") # saving plot
+
+# same plot as above except in `facet_wrap`, scale is set to be free, each graph has its own scale
+plot_free_scale <- ggplot() +
+  geom_area(data = stackarea, aes(x = as.numeric(Year), y = Emission, fill = EmissionType)) +
+  geom_line(data = total, aes(x = as.numeric(Year), y = National, color = "National")) +
+  geom_line(data = total, aes(x = as.numeric(Year), y = PercentageChange, color = "PercentageChange")) +
+  geom_point(data = total, aes(x = as.numeric(Year), y = National, color = "National")) +
+  geom_point(data = total, aes(x = as.numeric(Year), y = PercentageChange, color = "PercentageChange")) +
+  scale_fill_manual(values = c("#8DBEB3", "#B2AE20", "#77AD8C"), 
+                    breaks = c("CropCultivation", "FuelCombustion", "Livestock"), 
+                    labels = c("Crop Cultivation", "Fuel Combustion", "Livestock")) +
+  facet_wrap(~Level, scales = "free") +
+  scale_y_continuous(
+    name = "Emission in Million Metric Tons",
+    sec.axis = sec_axis(~., name = "Percentage Change in %")
+  ) +
+  labs(title = "Agricultural Emission in Southeast US and Tennessee  1990 to 2021",
+       subtitle = "Emission by Types and 5-Year-Percentage-Change Trend Lines",
+       x = "Year",
+       fill = "Emission Type") +
+  scale_color_manual(name = "5-Year-%-Change",
+                     values = c(National = "#9E681C", PercentageChange = "black"),
+                     labels = c(National = "National Value", PercentageChange = "Regional Value")) +
+  theme(text = element_text(family = "Avenir"))
+
+plot_free_scale
+
+
+ggsave("plot_free_scale.png", plot = plot_free_scale, width = 4000, height = 2000, units = "px")
+```
