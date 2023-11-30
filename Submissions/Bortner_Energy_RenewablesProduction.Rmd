@@ -1,0 +1,257 @@
+---
+title: "climate hack a thon"
+author: "Amanda Bortner"
+date: "2023-11-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(stringr)
+```
+
+
+```{r}
+df <- read_excel("/Users/amandabortner/Desktop/Data Science Fundamentals/DS 3100 data/Prod_dataset.xlsx")
+head(df)
+```
+State code represents the state the data is from 
+the MSN is a code that specifies the type of renewable energy:
+first two letters: energy source
+second two letters: energy sector
+last letter: type of data (P = physical unit, B = billion btu (british thermal unit))
+
+first, going to remove all the rows that end in P because I have no way of consolidating those different units, and billion btu is a good standard unit to use as the measure, so going to remove all other ones
+
+```{r}
+df_btu <- df[str_ends(df$MSN, "B"), ]
+```
+
+Now going to group by states and sum the billions of btu along different energy sources and sectors to get a number for each state for each year 
+
+```{r}
+df_years <- df_btu %>%
+  group_by(StateCode) %>%
+  summarize(across(c(`1960`, `1962`, `1964`, `1966`, `1968`, `1970`, `1972`, `1974`, `1976`, `1978`, `1980`, `1982`, `1984`, `1986`, `1988`, `1990`, `1992`, `1994`, `1996`, `1998`, `2000`, `2002`, `2004`, `2006`, `2008`, `2010`, `2012`, `2014`, `2016`, `2018`, `2020`), sum, na.rm = TRUE))
+```
+
+removing rows that have a state code that aren't a US state code
+```{r}
+df_years <- df_years %>%
+  filter(StateCode != "US") %>%
+  filter(StateCode != "X3") %>%
+  filter(StateCode != "X5")
+```
+there are now 51 rows, 50 states + DC, and an observation for each year and each state with the renewable energy production for energy sources and sectors that measure it in billion btu
+
+```{r}
+head(df_years) # checking it
+```
+
+Now going to split it up into Tennessee, Southeast, and USA
+
+```{r}
+df_TN <- df_years %>%
+  filter(StateCode == "TN")
+df_TN[, 1] <- NULL # removing state code
+df_TN <- df_TN %>%
+  pivot_longer(cols = everything(), 
+               names_to = "year")
+
+
+df_SE <- df_years %>%
+  filter(StateCode %in% c("TN", "AL", "FL", "GA", "KY", "MS", "NC", "SC")) %>%
+  summarize(across(c(`1960`, `1962`, `1964`, `1966`, `1968`, `1970`, `1972`, `1974`, `1976`, `1978`, `1980`, `1982`, `1984`, `1986`, `1988`, `1990`, `1992`, `1994`, `1996`, `1998`, `2000`, `2002`, `2004`, `2006`, `2008`, `2010`, `2012`, `2014`, `2016`, `2018`, `2020`), sum, na.rm = TRUE))
+df_SE <- df_SE %>%
+  pivot_longer(cols = everything(), 
+               names_to = "year")
+
+
+df_US <- df_years %>%
+   summarize(across(c(`1960`, `1962`, `1964`, `1966`, `1968`, `1970`, `1972`, `1974`, `1976`, `1978`, `1980`, `1982`, `1984`, `1986`, `1988`, `1990`, `1992`, `1994`, `1996`, `1998`, `2000`, `2002`, `2004`, `2006`, `2008`, `2010`, `2012`, `2014`, `2016`, `2018`, `2020`), sum, na.rm = TRUE))
+df_US <- df_US %>%
+  pivot_longer(cols = everything(), 
+               names_to = "year")
+```
+
+
+plotting lines 
+
+```{r}
+ggplot(df_TN, aes(x = year, y = value, group = 1)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Time", y = "Value", title = "Line Graph of renewable energy production in TN (in BTU) over time") +
+  theme_minimal()+
+  scale_x_discrete(breaks = seq(min(df_TN$year), max(df_TN$year), by = 3))
+```
+```{r}
+ggplot(df_SE, aes(x = year, y = value, group = 1)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Time", y = "Value", title = "Line Graph of renewable energy production in the Southeast (in BTU) over time") +
+  theme_minimal()+
+  scale_x_discrete(breaks = seq(min(df_SE$year), max(df_SE$year), by = 3))
+```
+```{r}
+ggplot(df_US, aes(x = year, y = value, group = 1)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Time", y = "Value", title = "Line Graph of renewable energy production in the US (in BTU) over time") +
+  theme_minimal()+
+  scale_x_discrete(breaks = seq(min(df_US$year), max(df_US$year), by = 3))
+```
+```{r}
+df_TN$Region <- "Tennessee"
+df_SE$Region <- "Southeast US"
+df_US$Region <- "United States"
+```
+
+```{r}
+df_combined <- rbind(df_TN, df_SE, df_US)
+```
+
+```{r}
+ggplot(df_combined, aes(x = year, y = value, color = Region)) +
+  geom_point() +
+  geom_line(aes(group = Region)) +
+  labs(x = "Time", y = "Value", title = "Renewable Energy Production (in BTU) Comparison") +
+  theme_minimal()+
+  scale_x_discrete(breaks = seq(min(df_combined$year), max(df_combined$year), by = 3))
+```
+normalizing the values so they can be plotted together
+
+```{r}
+df_TN$normalized_values <- (df_TN$value - min(df_TN$value)) / (max(df_TN$value) - min(df_TN$value))
+
+df_SE$normalized_values <- (df_SE$value - min(df_SE$value)) / (max(df_SE$value) - min(df_SE$value))
+
+df_US$normalized_values <- (df_US$value - min(df_US$value)) / (max(df_US$value) - min(df_US$value))
+
+df_combined <- rbind(df_TN, df_SE, df_US)
+
+plot1 <- ggplot(df_combined, aes(x = year, y = normalized_values, color = Region)) +
+  geom_point() +
+  geom_line(aes(group = Region)) +
+  labs(x = "Year", y = "Normalized Values of Renewable Energy Production", title = "Renewable Energy Production: Tennessee vs. the Southeast vs. the US") +
+  theme_minimal()+
+  scale_color_manual(values = c("Tennessee" = "#8DBEB3", "Southeast US" = "#6CA335", "United States" = "#9E681C"))+
+  scale_x_discrete(breaks = seq(min(df_combined$year), max(df_combined$year), by = 3))
+plot1
+```
+
+
+*** plot last 15 years anually
+
+```{r}
+df_last15 <- df_btu %>%
+  group_by(StateCode) %>%
+  summarize(across(c(`2006`, `2007`, `2008`, `2009`, `2010`, `2011`, `2012`, `2013`, `2014`, `2015`, `2016`, `2017`, `2018`, `2019`, `2020`, `2021`), sum, na.rm = TRUE))
+```
+
+removing rows that have a state code that aren't a US state code
+```{r}
+df_last15 <- df_last15 %>%
+  filter(StateCode != "US") %>%
+  filter(StateCode != "X3") %>%
+  filter(StateCode != "X5")
+head(df_last15)
+```
+
+```{r}
+df_TNlast15 <- df_last15 %>%
+  filter(StateCode == "TN")
+df_TNlast15[, 1] <- NULL # removing state code
+df_TNlast15 <- df_TNlast15 %>%
+  pivot_longer(cols = everything(), 
+               names_to = "year")
+
+df_SElast15 <- df_last15 %>%
+  filter(StateCode %in% c("TN", "AL", "FL", "GA", "KY", "MS", "NC", "SC")) %>%
+ summarize(across(c(`2006`, `2007`, `2008`, `2009`, `2010`, `2011`, `2012`, `2013`, `2014`, `2015`, `2016`, `2017`, `2018`, `2019`, `2020`, `2021`), sum, na.rm = TRUE)) %>%
+  pivot_longer(cols = everything(), 
+               names_to = "year")
+
+df_USlast15 <- df_last15 %>%
+  summarize(across(c(`2006`, `2007`, `2008`, `2009`, `2010`, `2011`, `2012`, `2013`, `2014`, `2015`, `2016`, `2017`, `2018`, `2019`, `2020`, `2021`), sum, na.rm = TRUE)) %>%
+  pivot_longer(cols = everything(), 
+               names_to = "year")
+```
+
+```{r}
+df_TNlast15$Region <- "Tennessee"
+df_SElast15$Region <- "Southeast US"
+df_USlast15$Region <- "United States"
+```
+
+```{r}
+df_combinedlast15 <- rbind(df_TNlast15, df_SElast15, df_USlast15)
+```
+
+```{r}
+ggplot(df_combinedlast15, aes(x = year, y = value, color = Region)) +
+  geom_point() +
+  geom_line(aes(group = Region)) +
+  labs(x = "Time", y = "Value", title = "Renewable Energy Production (in BTU) Comparison") +
+  theme_minimal()
+```
+normalizing the values so they can be plotted together
+
+```{r}
+df_TNlast15$normalized_values <- (df_TNlast15$value - min(df_TNlast15$value)) / (max(df_TNlast15$value) - min(df_TNlast15$value))
+
+df_SElast15$normalized_values <- (df_SElast15$value - min(df_SElast15$value)) / (max(df_SElast15$value) - min(df_SElast15$value))
+
+df_USlast15$normalized_values <- (df_USlast15$value - min(df_USlast15$value)) / (max(df_USlast15$value) - min(df_USlast15$value))
+
+df_combinedlast15 <- rbind(df_TNlast15, df_SElast15, df_USlast15)
+```
+
+```{r}
+install.packages("extrafont")
+library(extrafont)
+
+```
+
+```{r}
+#lighter gridlines
+#annotation about what it shows and source of the data
+plot2 <- ggplot(df_combinedlast15, aes(x = year, y = normalized_values, color = Region)) +
+  geom_line(aes(group = Region)) +
+  geom_point(shape = 21, aes(fill = Region), size = 2, color = "white") + 
+  labs(x = "Year", y = "Normalized Values of Renewable Energy Production\nOriginally in BTU (British Thermal Units)", title = "Renewable Energy Production: Tennessee vs. the Southeast vs. the US") +
+  theme_minimal() +
+  theme(panel.grid.major = element_line(color = "grey96", size = 0.5),
+        panel.background = element_rect(fill = "white", colour = "black"),
+        plot.background = element_rect(fill = "white", colour = NA),
+        text = element_text(family = "Avenir"),
+        plot.title = element_text(size = 16)) +
+  scale_color_manual(values = c("Tennessee" = "#8DBEB3", "Southeast US" = "#6CA335", "United States" = "#9E681C")) +
+  scale_fill_manual(values = c("Tennessee" = "#8DBEB3", "Southeast US" = "#6CA335", "United States" = "#9E681C"))
+
+plot2
+```
+
+
+```{r}
+ggplot2::ggsave(
+  filename = "EELU_data_viz.png", # change extension as needed
+  plot = plot2, # change to your {ggplot2} object
+  height = 6, # figure height, adjust as necessary
+  width = 9, # figure width, adjust as necessary
+  dpi = 1000 # high quality dots per inch 
+)
+
+
+```
+
+1. draw a topic and suggestions for public data sources
+2. create table/figure in software of choice
+3. apply report's template style
+4. submit by December 1, 2023
+
+source: https://www.eia.gov/state/seds/seds-data-complete.php#Production (US EIA (Energy Information Administration)) data set of all production estimates
+
