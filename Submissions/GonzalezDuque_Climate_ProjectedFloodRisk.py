@@ -3,16 +3,18 @@
 # _____________________________________________________________________________
 #
 #                       Coded by: Daniel Gonzalez-Duque
-#                               Last revised 2023-11-30
+#                               Last revised 2023-12-01
 # _____________________________________________________________________________
 # _____________________________________________________________________________
 """
 ______________________________________________________________________________
 
  DESCRIPTION:
-   This script creates a map of the projected flood risk in the US.
+   This script creates a map of the projected flood risk in the US. Keep in mind
+   that the data used for plotting is heavy and might take some time to load and
+   plot.
 
-   The data comes from the CEJST project. The data is available at:
+   The data source comes from the CEJST project. The data is available at:
 
    White House Council on Environmental Quality. (2022). Climate and Economic
    Justice Screening Tool. Retrieved November 30, 2023, from
@@ -23,6 +25,8 @@ ______________________________________________________________________________
 
    https://drive.google.com/drive/folders/1-TQDe8FUGF3rD_C3-nzxkJVV4uiuI6w0?usp=sharing
 
+   Please make sure to have all of the packages installed before running the
+   code and also correct the path to the data in your computer.
 ______________________________________________________________________________
 """
 # ----------------
@@ -231,7 +235,7 @@ ax_dc.spines['right'].set_visible(False)
 # Final Changes
 # ------------------------
 # fig.suptitle('Projected Flood Risk in the US', fontsize=16)
-fig.suptitle('Share of properties at risk of flood in 30 years', fontsize=16)
+fig.suptitle('Share of the properties at risk of flood in 30 years', fontsize=16)
 # Include letters
 fig.text(0.08, 0.5, '(A)', fontsize=16, weight='bold')
 fig.text(0.6, 0.5, '(B)', fontsize=16, weight='bold')
