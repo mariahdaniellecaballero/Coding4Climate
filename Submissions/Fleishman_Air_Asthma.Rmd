@@ -1,0 +1,122 @@
+---
+title: "Coding for Our Climate"
+author: "Sawyer Fleishman"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r}
+# load in data 
+
+library(tidyverse); library(ggplot2); library(patchwork)
+
+predata <- read.csv("data/PLACES__Local_Data_for_Better_Health__County_Data_2023_release.csv")
+data <- predata %>%
+  select(-c(Data_Value_Footnote_Symbol, Data_Value_Footnote))
+```
+
+```{r}
+# filter for only asthma data
+asthma_us <- data %>%
+  filter(MeasureId == "CASTHMA") %>%
+  filter(Data_Value_Type == "Age-adjusted prevalence") %>%
+  filter(StateAbbr != "US")
+
+# separate points into latitude and longitude
+asthma_us <- tidyr::extract(asthma_us, Geolocation, c('Longitude', 'Latitude'), '\\((.*)\\s(.*)\\)')
+
+asthma_us$Longitude <- abs(as.numeric(asthma_us$Longitude))
+asthma_us$Latitude <- as.numeric(asthma_us$Latitude)
+```
+
+```{r}
+# segment of data
+
+southeast <- c("KY", "TN", "NC", "SC", "MS", "AL", "GA", "FL")
+
+asthma_SE <- asthma_us %>%
+  filter(StateAbbr %in% southeast)
+
+asthma_TN <- asthma_us %>%
+  filter(StateAbbr == "TN")
+```
+
+```{r}
+# add state averages to data set
+state_avg <- asthma_us %>%
+  group_by(StateAbbr) %>%
+  summarize(StateAvg = mean(Data_Value))
+
+asthma_us <- merge(asthma_us, state_avg, by = "StateAbbr", all.x = TRUE)
+```
+
+```{r}
+# establish theme for ggplot 
+
+my_theme <- theme(
+    axis.title.x = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.line = element_line(
+      color = "black"
+    ),
+    panel.background = element_blank(),
+    plot.title = element_text(
+      size = 10, face = "bold", hjust = 0.5
+    ),
+    axis.title.y = element_text(size = 14),
+    axis.text.y = element_text(size = 12),
+    text = element_text(family = "Avenir")
+  )
+```
+
+```{r}
+# create shape outline for TN
+
+# TN data from https://www.igismap.com/download-tennessee-state-gis-maps-boundary-counties-rail-highway/
+TN_shape <- st_read("data/united_states_tennessee_administrative_boundaries_province_polygon/united_states_tennessee_administrative_boundaries_province_polygon.shp")
+
+```
+
+```{r}
+# create plot of US
+
+non_main <- c("AK", "HI")
+
+asthma_mainland <- asthma_us %>%
+  filter(!(StateAbbr %in% non_main))
+
+
+# Create new variable indicating whether the point is Southeast region
+asthma_mainland$Southeast <- ifelse(asthma_mainland$StateAbbr %in% southeast, "SE", "Other")
+
+asthma_prevalence <- ggplot() +
+  geom_point(data = asthma_mainland, aes(x = Longitude, y = Latitude, 
+                                         fill = StateAvg, color = Southeast,
+                                         stroke = 1), shape = 21, size = 3) +
+  geom_sf(data = TN_shape, linewidth = 0.75, color = alpha("white", 0.6), fill = NA) +
+  scale_fill_gradient(low = "#8DBEB3", high = "#9E681C", name = "% of State with Asthma") + 
+  scale_color_manual(values = c("SE" = alpha("gray", 0), Other = alpha("white", 0)), guide = "none") +  # Set colors for the condition
+  scale_x_reverse() +
+  my_theme +
+  theme(legend.title = element_text(size = 6),
+        axis.text.x = element_blank(), axis.text.y = element_blank(),
+        axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
+        axis.line.x = element_blank(), axis.line.y = element_blank())
+```
+
+```{r}
+ggplot2::ggsave(
+
+  filename = "Asthma Prevalence in US.png", # change extension as needed
+
+  plot = asthma_prevalence, # change to your {ggplot2} object
+
+  height = 6, # figure height, adjust as necessary
+
+  width = 8, # figure width, adjust as necessary
+
+  dpi = 600 # high quality dots per inch 
+
+)
+```
