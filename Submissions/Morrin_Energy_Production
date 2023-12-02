@@ -1,0 +1,167 @@
+---
+title: "Energy Production by Sector Visualization"
+author: "Nathaniel Morrin"
+output: html_document
+date: "2023-12-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#load required packages and data
+require(patchwork)
+require(tidyverse)
+prod_data <- read.csv("~/Desktop/Personal/Prod_dataset.csv")
+```
+
+#Data Wrangling
+```{r}
+#US
+US_prod <- prod_data %>%
+  filter(MSN %in% c("PAPRB","NGMPB","CLPRB","NUEGP","REPRB")) %>%
+  gather("year","Billion_Btu",4:65) %>%
+  mutate(year = gsub('X', '', year),
+         Billion_Btu = ifelse(MSN == "NUEGP",Billion_Btu*3.412,Billion_Btu))
+
+#change MSN Codes to their respective energy sources 
+US_prod$MSN <- recode(US_prod$MSN,PAPRB = 'Crude Oil', 
+                              NGMPB  = 'Natural Gas',
+                              CLPRB = 'Coal',
+                              NUEGP = 'Nuclear',
+                              REPRB = 'Renewables*')
+
+
+forplot_US <- US_prod %>%
+  group_by(year) %>%
+  mutate(tot_Btu = sum(Billion_Btu)) %>%
+  ungroup() %>%
+  group_by(MSN,year) %>%
+  mutate(tot_Btu_MSN = sum(Billion_Btu)) %>%
+  ungroup() %>%
+  mutate(prop_Btu = tot_Btu_MSN/tot_Btu)
+#Southeast
+SE_prod <- US_prod%>%
+  filter(StateCode %in% c("TN","KY","NC","SC","GA","FL","AL","MS"))
+
+forplot_SE <- SE_prod %>%
+  group_by(year) %>%
+  mutate(tot_Btu = sum(Billion_Btu)) %>%
+  ungroup() %>%
+  group_by(MSN,year) %>%
+  mutate(tot_Btu_MSN = sum(Billion_Btu)) %>%
+  ungroup() %>%
+  mutate(prop_Btu = tot_Btu_MSN/tot_Btu)
+#Tennessee
+TN_prod <- US_prod %>%
+  filter(StateCode == "TN")
+
+forplot_TN <- TN_prod %>%
+  group_by(year) %>%
+  mutate(tot_Btu = sum(Billion_Btu)) %>%
+  ungroup() %>%
+  group_by(MSN,year) %>%
+  mutate(tot_Btu_MSN = sum(Billion_Btu)) %>%
+  ungroup() %>%
+  mutate(prop_Btu = tot_Btu_MSN/tot_Btu)
+```
+
+#Final Visualizations
+
+##Totals
+```{r}
+PTUS <- forplot_US %>%
+  ggplot(aes(x=as.numeric(year), y=tot_Btu_MSN,color=MSN)) +
+  geom_line(linewidth=0.9) +
+  scale_color_brewer(palette = "Set2") +
+  theme_bw() +
+  theme(text=element_text(family="Avenir")) +
+  labs(x = "Year",
+       y = "Energy Production (Btu)",
+       color = "Source",
+       tag = "Fig. A.1",
+       title = "Total Energy Production by Source",
+       subtitle = "United States")
+
+PTSE <- forplot_SE %>%
+  ggplot(aes(x=as.numeric(year), y=tot_Btu_MSN,color=MSN)) +
+  geom_line(linewidth=0.9) +
+  scale_color_brewer(palette = "Set2") +
+  theme_bw() +
+  theme(text=element_text(family="Avenir")) +
+  labs(x = "Year",
+       y = "Energy Production (Btu)",
+       color = "Source",
+       tag = "Fig. B.1",
+       subtitle = "Southeast Region")
+
+PTTN <- forplot_TN %>%
+  ggplot(aes(x=as.numeric(year),y=Billion_Btu,color=MSN)) +
+  geom_line(linewidth=0.9) +
+  scale_color_brewer(palette = "Set2") +
+  theme_bw() +
+  theme(text=element_text(family="Avenir")) +
+  labs(x = "Year",
+       y = "Energy Production (Btu)",
+       color = "Source",
+       tag = "Fig. C.1",
+       subtitle = "Tennessee")
+```
+
+##Proportions
+```{r}
+PPUS <- forplot_US %>%
+  ggplot(aes(x=as.numeric(year), y=prop_Btu,color=MSN)) +
+  geom_line(linewidth=0.9) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_color_brewer(palette = "Set2") +
+  theme_bw() +
+  theme(text=element_text(family="Avenir")) +
+  labs(x = "Year",
+       y = "Percent",
+       color = "Source",
+       tag = "Fig. A.2",
+       title = "Proportion of Total Energy Production by Source",
+       subtitle = "United States")
+
+PPSE <- forplot_SE %>%
+  ggplot(aes(x=as.numeric(year), y=prop_Btu,color=MSN)) +
+  geom_line(linewidth=0.9) +
+  scale_color_brewer(palette = "Set2") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  theme(text=element_text(family="Avenir")) +
+  labs(x = "Year",
+       y = "Percent",
+       color = "Source",
+       tag = "Fig. B.2",
+       subtitle = "Southeast Region")
+
+PPTN <- forplot_TN %>%
+  ggplot(aes(x=as.numeric(year),y=prop_Btu,color=MSN)) +
+  geom_line(linewidth=0.9) +
+  scale_color_brewer(palette = "Set2") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  theme(text=element_text(family="Avenir")) +
+  labs(x = "Year",
+       y = "Percent",
+       color = "Source",
+       tag = "Fig. C.2",
+       subtitle = "Tennessee")
+```
+
+#Put them together
+```{r}
+Patchwork <- (PTUS + PPUS)/(PTSE + PPSE)/(PTTN + PPTN) + plot_layout(guides="collect")
+Patchwork + 
+plot_annotation(caption = '* Includes biofuels, biomass, geothermal, hydroelectric, solar, and wind energy 
+Source: U.S. Energy Information Administration, State Energy Production Estimates 1960 Through 2021, June 2023, 
+https://www.eia.gov/state/seds/sep_prod/SEDS_Production_Report.pdf, Accessed on December 1, 2023.',
+                title = 'Energy Production by Source (1960-2021)') & 
+  theme(text = element_text('Avenir')) &
+  theme(legend.margin=margin(r=1,l=1,unit='cm'),legend.text = element_text(size=11),legend.title = element_text(size = 15))
+
+```
+
